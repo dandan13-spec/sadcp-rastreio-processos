@@ -5,30 +5,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
-      - name: Instalar Java
-        uses: actions/setup-java@v4
+      - uses: actions/setup-node@v4
         with:
-          distribution: 'temurin'
-          java-version: '11' # Versão mais compatível com projetos antigos
-
-      - name: Preparar Ferramentas
+          node-version: '14' # Versão bem antiga e compatível
+      - name: Instalando Tudo
         run: |
-          npm install -g cordova
-          # O comando abaixo força a instalação mesmo com avisos
-          npm install --legacy-peer-deps || true 
-
-      - name: Criar Pasta Android
-        run: |
-          cordova platform add android --no-telemetry || true
-          
-      - name: Tentar Gerar APK
-        run: |
+          npm install -g cordova@10.0.0
+          cordova platform add android@9.1.0 --no-telemetry || true
           cordova build android --debug --no-telemetry
-
-      - name: Entregar Arquivo
-        if: always() # Tenta entregar mesmo se der aviso
+      - name: Download
         uses: actions/upload-artifact@v4
         with:
-          name: meu-app-resultado
-          path: platforms/android/app/build/outputs/apk/debug/*.apk
+          name: app-teste
+          path: "*/.apk" # Procura o APK em qualquer pasta
