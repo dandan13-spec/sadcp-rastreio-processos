@@ -1,84 +1,42 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="utf-8">
-<title>SADCP - Rastreio de Processos</title>
-
-<style>
-body {
-    font-family: Arial;
-    background: #f0f4f8;
-    margin: 0;
-}
-
-.header {
-    background: #003366;
-    color: white;
-    padding: 15px;
-    text-align: center;
-}
-
-.logo {
-    width: 120px;
-    margin-bottom: 10px;
-}
-
-.subtitulo {
-    font-size: 14px;
-    opacity: 0.9;
-}
-
-.container {
-    padding: 20px;
-}
-
-input, button {
-    width: 100%;
-    padding: 12px;
-    margin-top: 10px;
-}
-
-.card {
-    background: white;
-    padding: 15px;
-    margin-top: 15px;
-    border-radius: 10px;
-}
-
-.linha {
-    border-bottom: 1px solid #ddd;
-    padding: 5px 0;
-}
-
-.titulo {
-    font-weight: bold;
-    margin-bottom: 10px;
-}
-</style>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1, width=device-width, viewport-fit=cover">
+    <title>SADCP - Rastreio de Processos</title>
+    <style>
+        body { font-family: Arial; background: #f0f4f8; margin: 0; }
+        .header { background: #003366; color: white; padding: 15px; text-align: center; }
+        .logo { width: 120px; margin-bottom: 10px; }
+        .subtitulo { font-size: 14px; opacity: 0.9; }
+        .container { padding: 20px; }
+        input { width: 100%; padding: 12px; margin-top: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; margin-top: 10px; background: #003366; color: white; border: none; border-radius: 5px; font-weight: bold; }
+        .card { background: white; padding: 15px; margin-top: 15px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .linha { border-bottom: 1px solid #ddd; padding: 10px 0; }
+        .titulo { font-weight: bold; margin-bottom: 10px; color: #003366; }
+        .status-erro { color: #cc0000; font-weight: bold; }
+    </style>
 </head>
-
 <body>
 
 <div class="header">
-    <img src="img/logo.png" class="logo">
     <h2>Prefeitura de Betim</h2>
     <div class="subtitulo">SADCP - Secretaria Adjunta de Convênios e Parcerias</div>
 </div>
 
 <div class="container">
-
-<input id="numero" placeholder="Digite o número do processo">
-<button onclick="buscar()">Consultar</button>
-
-<div id="resultado"></div>
-
+    <input id="numero" type="text" placeholder="Digite o número do processo">
+    <button onclick="buscar()">CONSULTAR</button>
+    <div id="resultado"></div>
 </div>
 
 <script>
-const url = "https://docs.google.com/spreadsheets/d/1ckWKeaGtgwrNTehuP4jVN9MeTAYdqEAS/export?format=csv";
+// IMPORTANTE: Sua planilha precisa estar "Publicada na Web" como CSV no Google Sheets
+const url = "https://docs.google.com/spreadsheets/d/1ckWKeaGtgwrNTehuP4jVN9MeTAYdqEAS/gviz/tq?tqx=out:csv";
 
 function limpar(valor) {
-    return valor.replace(/"/g, "").trim();
+    return valor ? valor.replace(/"/g, "").trim() : "";
 }
 
 function normalizar(valor) {
@@ -86,65 +44,68 @@ function normalizar(valor) {
 }
 
 async function buscar() {
+    const resContainer = document.getElementById("resultado");
+    const numDigitado = document.getElementById("numero").value;
+    const numeroInput = normalizar(numDigitado);
 
-    const numeroInput = normalizar(document.getElementById("numero").value);
-
-    const res = await fetch(url);
-    const text = await res.text();
-
-    const linhas = text.split("\n");
-
-    let historico = [];
-    let nomeProcesso = "";
-
-    for (let i = 1; i < linhas.length; i++) {
-
-        const col = linhas[i].split(",");
-
-        if (!col || col.length < 4) continue;
-
-        const numero = normalizar(limpar(col[0]));
-
-        if (numero === numeroInput) {
-
-            nomeProcesso = limpar(col[1]);
-
-            historico.push({
-                status: limpar(col[2]),
-                data: limpar(col[3])
-            });
-        }
-    }
-
-    if (historico.length === 0) {
-        document.getElementById("resultado").innerHTML =
-            "<div class='card'>❌ Processo não encontrado</div>";
+    if (!numeroInput) {
+        resContainer.innerHTML = "<div class='card status-erro'>⚠️ Digite o número do processo.</div>";
         return;
     }
 
-    historico.reverse();
+    resContainer.innerHTML = "<div class='card'>⏳ Buscando informações...</div>";
 
-    let html = `
-    <div class="card">
-        <div class="titulo">${nomeProcesso}</div>
-        <div><b>Processo:</b> ${document.getElementById("numero").value}</div>
-        <br>
-        <div class="titulo">📜 Histórico</div>
-    `;
+    try {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error("Erro ao acessar servidor");
+        
+        const text = await res.text();
+        const linhas = text.split("\n");
 
-    historico.forEach(item => {
-        html += `
-        <div class="linha">
-            <b>${item.data}</b> — ${item.status}
-        </div>
+        let historico = [];
+        let nomeProcesso = "";
+
+        for (let i = 1; i < linhas.length; i++) {
+            const col = linhas[i].split(",");
+            if (col.length < 3) continue;
+
+            const numeroPlanilha = normalizar(limpar(col[0]));
+
+            if (numeroPlanilha === numeroInput) {
+                nomeProcesso = limpar(col[1]);
+                historico.push({
+                    status: limpar(col[2]),
+                    data: limpar(col[3])
+                });
+            }
+        }
+
+        if (historico.length === 0) {
+            resContainer.innerHTML = "<div class='card status-erro'>❌ Processo " + numDigitado + " não encontrado.</div>";
+            return;
+        }
+
+        historico.reverse();
+
+        let html = `
+        <div class="card">
+            <div class="titulo">${nomeProcesso}</div>
+            <div><b>Processo:</b> ${numDigitado}</div>
+            <br>
+            <div class="titulo">📜 Histórico de Movimentações</div>
         `;
-    });
 
-    html += </div>;
+        historico.forEach(item => {
+            html += <div class="linha"><b>${item.data}</b> — ${item.status}</div>;
+        });
 
-    document.getElementById("resultado").innerHTML = html;
+        html += '</div>';
+        resContainer.innerHTML = html;
+
+    } catch (error) {
+        resContainer.innerHTML = "<div class='card status-erro'>🚫 Erro de conexão. Verifique sua internet.<br><small>" + error.message + "</small></div>";
+    }
 }
 </script>
-
 </body>
 </html>
