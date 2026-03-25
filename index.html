@@ -1,39 +1,44 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-br">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="initial-scale=1, width=device-width, viewport-fit=cover">
     <title>SADCP - Rastreio de Processos</title>
     <style>
-        body { font-family: Arial; background: #f0f4f8; margin: 0; }
-        .header { background: #003366; color: white; padding: 15px; text-align: center; }
-        .logo { width: 120px; margin-bottom: 10px; }
-        .subtitulo { font-size: 14px; opacity: 0.9; }
-        .container { padding: 20px; }
-        input { width: 100%; padding: 12px; margin-top: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
-        button { width: 100%; padding: 12px; margin-top: 10px; background: #003366; color: white; border: none; border-radius: 5px; font-weight: bold; }
-        .card { background: white; padding: 15px; margin-top: 15px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .linha { border-bottom: 1px solid #ddd; padding: 10px 0; }
-        .titulo { font-weight: bold; margin-bottom: 10px; color: #003366; }
-        .status-erro { color: #cc0000; font-weight: bold; }
+        body { font-family: Arial, sans-serif; background: #f0f4f8; margin: 0; color: #333; }
+        .header { background: #003366; color: white; padding: 20px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+        .subtitulo { font-size: 13px; opacity: 0.8; margin-top: 5px; text-transform: uppercase; letter-spacing: 1px; }
+        .container { padding: 20px; max-width: 500px; margin: auto; }
+        input { width: 100%; padding: 15px; margin-top: 10px; border: 2px solid #ddd; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
+        input:focus { border-color: #003366; outline: none; }
+        button { width: 100%; padding: 15px; margin-top: 15px; background: #003366; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; }
+        button:active { background: #002244; }
+        .card { background: white; padding: 20px; margin-top: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border-left: 5px solid #003366; }
+        .linha { border-bottom: 1px solid #eee; padding: 12px 0; display: flex; flex-direction: column; }
+        .linha:last-child { border-bottom: none; }
+        .data-status { font-weight: bold; color: #003366; margin-bottom: 4px; }
+        .desc-status { color: #555; line-height: 1.4; }
+        .titulo-processo { font-size: 18px; font-weight: bold; color: #003366; margin-bottom: 10px; border-bottom: 2px solid #f0f4f8; padding-bottom: 8px; }
+        .erro { color: #d32f2f; background: #ffdde0; padding: 15px; border-radius: 8px; margin-top: 20px; text-align: center; font-weight: bold; }
+        .loading { text-align: center; margin-top: 20px; color: #003366; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div class="header">
-    <h2>Prefeitura de Betim</h2>
-    <div class="subtitulo">SADCP - Secretaria Adjunta de Convênios e Parcerias</div>
+    <div style="font-size: 22px; font-weight: bold;">Prefeitura de Betim</div>
+    <div class="subtitulo">SADCP - Rastreio de Processos</div>
 </div>
 
 <div class="container">
-    <input id="numero" type="text" placeholder="Digite o número do processo">
-    <button onclick="buscar()">CONSULTAR</button>
+    <input id="numero" type="tel" placeholder="Nº do Processo (Ex: 12345)">
+    <button onclick="buscar()">CONSULTAR AGORA</button>
     <div id="resultado"></div>
 </div>
 
 <script>
-// IMPORTANTE: Sua planilha precisa estar "Publicada na Web" como CSV no Google Sheets
-const url = "https://docs.google.com/spreadsheets/d/1ckWKeaGtgwrNTehuP4jVN9MeTAYdqEAS/gviz/tq?tqx=out:csv";
+// Link da sua planilha publicado como CSV
+const url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTx4CSPmuPFOp3DbjlhrF9AOemwFqa8rs2tU0hOzN4MOHkV-SSdy42FPfSNUAtqlA/pub?output=csv";
 
 function limpar(valor) {
     return valor ? valor.replace(/"/g, "").trim() : "";
@@ -46,18 +51,19 @@ function normalizar(valor) {
 async function buscar() {
     const resContainer = document.getElementById("resultado");
     const numDigitado = document.getElementById("numero").value;
-    const numeroInput = normalizar(numDigitado);
+    const numeroBusca = normalizar(numDigitado);
 
-    if (!numeroInput) {
-        resContainer.innerHTML = "<div class='card status-erro'>⚠️ Digite o número do processo.</div>";
+    if (!numeroBusca) {
+        resContainer.innerHTML = "<div class='erro'>⚠️ Por favor, digite o número do processo.</div>";
         return;
     }
 
-    resContainer.innerHTML = "<div class='card'>⏳ Buscando informações...</div>";
+    resContainer.innerHTML = "<div class='loading'>⏳ Localizando informações...</div>";
 
     try {
-        const res = await fetch(url);
-        if (!res.ok) throw new Error("Erro ao acessar servidor");
+        // O cache: 'no-store' força o app a buscar dados novos sempre
+        const res = await fetch(url, { cache: 'no-store' });
+        if (!res.ok) throw new Error("Falha na conexão com o servidor.");
         
         const text = await res.text();
         const linhas = text.split("\n");
@@ -71,7 +77,7 @@ async function buscar() {
 
             const numeroPlanilha = normalizar(limpar(col[0]));
 
-            if (numeroPlanilha === numeroInput) {
+            if (numeroPlanilha === numeroBusca) {
                 nomeProcesso = limpar(col[1]);
                 historico.push({
                     status: limpar(col[2]),
@@ -81,29 +87,33 @@ async function buscar() {
         }
 
         if (historico.length === 0) {
-            resContainer.innerHTML = "<div class='card status-erro'>❌ Processo " + numDigitado + " não encontrado.</div>";
+            resContainer.innerHTML = "<div class='erro'>❌ Processo " + numDigitado + " não encontrado.</div>";
             return;
         }
 
+        // Inverte para mostrar o mais recente primeiro
         historico.reverse();
 
         let html = `
         <div class="card">
-            <div class="titulo">${nomeProcesso}</div>
-            <div><b>Processo:</b> ${numDigitado}</div>
-            <br>
-            <div class="titulo">📜 Histórico de Movimentações</div>
+            <div class="titulo-processo">${nomeProcesso}</div>
+            <div style="margin-bottom: 20px;"><b>ID:</b> ${numDigitado}</div>
+            <div style="font-weight: bold; border-bottom: 1px solid #003366; display: inline-block; margin-bottom: 10px;">HISTÓRICO:</div>
         `;
 
         historico.forEach(item => {
-            html += <div class="linha"><b>${item.data}</b> — ${item.status}</div>;
+            html += `
+            <div class="linha">
+                <span class="data-status">${item.data}</span>
+                <span class="desc-status">${item.status}</span>
+            </div>`;
         });
 
         html += '</div>';
         resContainer.innerHTML = html;
 
     } catch (error) {
-        resContainer.innerHTML = "<div class='card status-erro'>🚫 Erro de conexão. Verifique sua internet.<br><small>" + error.message + "</small></div>";
+        resContainer.innerHTML = "<div class='erro'>🚫 Erro de rede. Verifique sua conexão e tente novamente.</div>";
     }
 }
 </script>
