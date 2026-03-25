@@ -34,11 +34,17 @@ jobs:
       - name: Install Cordova
         run: npm install -g cordova
 
-      - name: Build APK (Usando Java 11 e Gradle 7.4.2)
+      - name: Build APK (Forçando Gradle 7.4.2 e Java 11)
         run: |
+          # Remove o Gradle do sistema para evitar que o Gradle 9.4 interfira
+          sudo rm -rf /usr/bin/gradle /usr/share/gradle*
+          
           cordova platform rm android --nosave || echo "Limpo"
           cordova platform add android@11.0.0 --non-interactive
-          CORDOVA_ANDROID_GRADLE_DISTRIBUTION_URL="https://services.gradle.org/distributions/gradle-7.4.2-all.zip" cordova build android --debug --no-telemetry
+          
+          # Comando de build com a URL do Gradle correta
+          export CORDOVA_ANDROID_GRADLE_DISTRIBUTION_URL="https://services.gradle.org/distributions/gradle-7.4.2-all.zip"
+          cordova build android --debug --no-telemetry
         env:
           JAVA_HOME: ${{ env.JAVA_HOME_11_X64 }}
 
