@@ -27,9 +27,18 @@ jobs:
       - name: Instalar Cordova
         run: npm install -g cordova
 
+      - name: Adicionar Plataforma Android
+        run: |
+          # Tenta adicionar a plataforma. Se já existir, ignora o erro e continua.
+          cordova platform add android --non-interactive || echo "Plataforma já configurada."
+
       - name: Criar APK (Build)
         run: cordova build android --debug --no-telemetry
         env:
-          # Aqui está o segredo: o Gradle usará o 17 para rodar, 
-          # mas o Cordova tentará usar o que estiver no PATH.
           JAVA_HOME: ${{ env.JAVA_HOME_17_X64 }}
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-debug
+          path: platforms/android/app/build/outputs/apk/debug/app-debug.apk
