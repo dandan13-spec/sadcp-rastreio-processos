@@ -12,19 +12,13 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Configurar Java 11 e 17
+      # Lição 1: O Java 17 é necessário para as ferramentas do Android (SDK), 
+      # mas o build precisa do Java 11. Vamos instalar o 11 como padrão.
+      - name: Configurar Java 11
         uses: actions/setup-java@v4
         with:
-          java-version: |
-            11
-            17
+          java-version: '11'
           distribution: 'temurin'
-
-      - name: Instalar Build Tools 32.0.0 (Usando Java 17)
-        run: |
-          echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_HOME "build-tools;32.0.0" "platforms;android-32"
-        env:
-          JAVA_HOME: ${{ env.JAVA_HOME_17_X64 }}
 
       - name: Instalar Node.js e Cordova
         uses: actions/setup-node@v4
@@ -34,17 +28,17 @@ jobs:
       - name: Install Cordova
         run: npm install -g cordova
 
-      - name: Build APK (Forçando Gradle 7.4.2 e Java 11)
+      # Lição 2: Não vamos deixar o GitHub usar o Gradle 9 dele.
+      # Vamos limpar a plataforma e forçar o Cordova a baixar a versão correta (7.4.2).
+      - name: Build APK
         run: |
-          # Remove o Gradle do sistema para evitar que o Gradle 9.4 interfira
-          sudo rm -rf /usr/bin/gradle /usr/share/gradle*
-          
-          cordova platform rm android --nosave || echo "Limpo"
           cordova platform add android@11.0.0 --non-interactive
           
-          # Comando de build com a URL do Gradle correta
-          export CORDOVA_ANDROID_GRADLE_DISTRIBUTION_URL="https://services.gradle.org/distributions/gradle-7.4.2-all.zip"
-          cordova build android --debug --no-telemetry
+          # Criamos um arquivo de propriedades para travar a versão do Gradle antes do build
+          echo "distributionUrl=https\://services.gradle.org/distributions/gradle-7.4.2-all.zip" > platforms/android/gradle/wrapper/gradle-wrapper.properties
+          
+          # Rodamos o build ignorando o Gradle do sistema
+          cordova build android --debug --no-telemetry -- --gradleArg=-Dorg.gradle.java.home=$JAVA_HOME
         env:
           JAVA_HOME: ${{ env.JAVA_HOME_11_X64 }}
 
