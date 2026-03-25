@@ -19,10 +19,14 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Instalar Gradle 8.7 (Compatível com Cordova)
+      - name: Instalar Gradle 8.7
         uses: gradle/actions/setup-gradle@v3
         with:
           gradle-version: 8.7
+
+      - name: Instalar Build Tools 32.0.0 (Exigido pelo seu projeto)
+        run: |
+          echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_HOME "build-tools;32.0.0" "platforms;android-32"
 
       - name: Instalar Node.js
         uses: actions/setup-node@v4
