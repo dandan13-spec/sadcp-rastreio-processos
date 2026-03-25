@@ -1,15 +1,36 @@
-steps:
-      - name: Checkout repository
+[08:42, 25/03/2026] Daniel: - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Configurar Java 8
+      - name: Configurar Java para o Cordova
         uses: actions/setup-java@v4
         with:
-          java-version: '8'
+          java-version: '11' # O Java 11 costuma ser o "meio termo" ideal para Cordova moderno. Se falhar, use '8'.
           distribution: 'temurin'
 
-      - name: Instalar Cordova
-        run: npm install -g cordova
+      - name: Instalar Dependências e Cordova
+        run: |
+          npm install -g cordova
+          # Adicione aqui outros comandos de instalação se necessário
 
       - name: Criar APK
         run: cordova build android --debug --no-telemetry
+        env:
+          JAVA_HOME: ${{ env.JAVA_HOME_11_X64 }} # Garante que o Cordova use o Java correto
+[08:45, 25/03/2026] Daniel: - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Configurar Java para o Cordova
+        uses: actions/setup-java@v4
+        with:
+          java-version: '11' # O Java 11 costuma ser o "meio termo" ideal para Cordova moderno. Se falhar, use '8'.
+          distribution: 'temurin'
+
+      - name: Instalar Dependências e Cordova
+        run: |
+          npm install -g cordova
+          # Adicione aqui outros comandos de instalação se necessário
+
+      - name: Criar APK
+        run: cordova build android --debug --no-telemetry
+        env:
+          JAVA_HOME: ${{ env.JAVA_HOME_11_X64 }} # Garante que o Cordova use o Java correto
