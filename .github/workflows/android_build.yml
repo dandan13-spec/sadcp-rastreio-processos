@@ -13,11 +13,16 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Configurar Java 17 (Exigido pelo Gradle 9)
+      - name: Configurar Java 17
         uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
+
+      - name: Instalar Gradle 8.7 (Compatível com Cordova)
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: 8.7
 
       - name: Instalar Node.js
         uses: actions/setup-node@v4
@@ -29,8 +34,7 @@ jobs:
 
       - name: Adicionar Plataforma Android
         run: |
-          # Tenta adicionar a plataforma. Se já existir, ignora o erro e continua.
-          cordova platform add android --non-interactive || echo "Plataforma já configurada."
+          cordova platform add android --non-interactive || echo "Plataforma já existe"
 
       - name: Criar APK (Build)
         run: cordova build android --debug --no-telemetry
