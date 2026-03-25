@@ -5,16 +5,26 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+
+      - name: Configurar Java (O que faltava)
+        uses: actions/setup-java@v4
         with:
-          node-version: '14' # Versão bem antiga e compatível
-      - name: Instalando Tudo
+          distribution: 'zulu' # Esta versão é a mais aceita pelo Android 29
+          java-version: '8'    # O seu projeto precisa dessa versão específica
+
+      - name: Configurar Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '14'
+
+      - name: Instalando e Gerando APK
         run: |
           npm install -g cordova@10.0.0
           cordova platform add android@9.1.0 --no-telemetry || true
           cordova build android --debug --no-telemetry
-      - name: Download
+
+      - name: Baixar o Arquivo Pronto
         uses: actions/upload-artifact@v4
         with:
-          name: app-teste
-          path: "*/.apk" # Procura o APK em qualquer pasta
+          name: meu-aplicativo-final
+          path: "*/.apk"
