@@ -5,17 +5,26 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+
+      - name: Configurar Java 17 (Para o Motor do Android)
+        uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: '8' # O Android 29 ama essa versão
-      - name: Instalando e Criando
+          java-version: '17'
+
+      - name: Instalando Ferramentas
         run: |
-          npm install -g cordova@10.0.0 --no-audit
-          cordova platform add android@9.1.0 --no-telemetry --no-fetch || true
-          cordova build android --debug --no-telemetry --device
-      - name: Pegar o APK
+          npm install -g cordova@10.0.0
+          cordova platform add android@9.1.0 --no-telemetry || true
+
+      - name: Ajustar Versão do Java para o Build
+        run: echo "JAVA_HOME=$JAVA_HOME_17_X64" >> $GITHUB_ENV
+
+      - name: Criar APK
+        run: cordova build android --debug --no-telemetry
+
+      - name: Disponibilizar APK
         uses: actions/upload-artifact@v4
         with:
-          name: meu-app-resultado
-          path: "platforms/android/app/build/outputs/apk/debug/*.apk"
+          name: meu-app-sucesso
+          path: "*/.apk"
