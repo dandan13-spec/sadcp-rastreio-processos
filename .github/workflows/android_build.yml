@@ -8,7 +8,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -19,29 +18,22 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Instalar Gradle 8.7
-        uses: gradle/actions/setup-gradle@v3
-        with:
-          gradle-version: 8.7
-
-      - name: Instalar Build Tools 32.0.0 (Exigido pelo seu projeto)
+      - name: Instalar Build Tools 32.0.0
         run: |
           echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_HOME "build-tools;32.0.0" "platforms;android-32"
 
-      - name: Instalar Node.js
+      - name: Instalar Node.js e Cordova
         uses: actions/setup-node@v4
         with:
           node-version: '18'
-
-      - name: Instalar Cordova
+      
+      - name: Install Cordova
         run: npm install -g cordova
 
-      - name: Adicionar Plataforma Android
+      - name: Build APK
         run: |
-          cordova platform add android --non-interactive || echo "Plataforma já existe"
-
-      - name: Criar APK (Build)
-        run: cordova build android --debug --no-telemetry
+          cordova platform add android --non-interactive
+          cordova build android --debug --no-telemetry
         env:
           JAVA_HOME: ${{ env.JAVA_HOME_17_X64 }}
 
