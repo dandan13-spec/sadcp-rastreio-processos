@@ -1,30 +1,18 @@
-name: Gerar meu Aplicativo
-on: [push, workflow_dispatch]
-jobs:
-  construir:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
+- name: Checkout repository
+        uses: actions/checkout@v4
 
-      - name: Configurar Java 17 (Para o Motor do Android)
+      - name: Configurar Java para o Cordova
         uses: actions/setup-java@v4
         with:
+          java-version: '11' # O Java 11 costuma ser o "meio termo" ideal para Cordova moderno. Se falhar, use '8'.
           distribution: 'temurin'
-          java-version: '17'
 
-      - name: Instalando Ferramentas
+      - name: Instalar Dependências e Cordova
         run: |
-          npm install -g cordova@10.0.0
-          cordova platform add android@9.1.0 --no-telemetry || true
-
-      - name: Ajustar Versão do Java para o Build
-        run: echo "JAVA_HOME=$JAVA_HOME_17_X64" >> $GITHUB_ENV
+          npm install -g cordova
+          # Adicione aqui outros comandos de instalação se necessário
 
       - name: Criar APK
         run: cordova build android --debug --no-telemetry
-
-      - name: Disponibilizar APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: meu-app-sucesso
-          path: "*/.apk"
+        env:
+          JAVA_HOME: ${{ env.JAVA_HOME_11_X64 }} # Garante que o Cordova use o Java correto
