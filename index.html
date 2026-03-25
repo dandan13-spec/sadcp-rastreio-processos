@@ -15,7 +15,6 @@
         button:active { background: #002244; }
         .card { background: white; padding: 20px; margin-top: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border-left: 5px solid #003366; }
         .linha { border-bottom: 1px solid #eee; padding: 12px 0; display: flex; flex-direction: column; }
-        .linha:last-child { border-bottom: none; }
         .data-status { font-weight: bold; color: #003366; margin-bottom: 4px; }
         .desc-status { color: #555; line-height: 1.4; }
         .titulo-processo { font-size: 18px; font-weight: bold; color: #003366; margin-bottom: 10px; border-bottom: 2px solid #f0f4f8; padding-bottom: 8px; }
@@ -32,90 +31,88 @@
 
 <div class="container">
     <input id="numero" type="tel" placeholder="Nº do Processo (Ex: 12345)">
-    <button onclick="buscar()">CONSULTAR AGORA</button>
+    <button id="btnConsultar">CONSULTAR AGORA</button>
     <div id="resultado"></div>
 </div>
 
 <script>
-// Link da sua planilha publicado como CSV
 const url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTx4CSPmuPFOp3DbjlhrF9AOemwFqa8rs2tU0hOzN4MOHkV-SSdy42FPfSNUAtqlA/pub?output=csv";
 
-function limpar(valor) {
-    return valor ? valor.replace(/"/g, "").trim() : "";
+function parseCSVLine(text) {
+    const res = [];
+    let cell = '';
+    let inQuotes = false;
+    for (let i = 0; i < text.length; i++) {
+        let char = text[i];
+        if (char === '"') inQuotes = !inQuotes;
+        else if (char === ',' && !inQuotes) {
+            res.push(cell.trim());
+            cell = '';
+        } else cell += char;
+    }
+    res.push(cell.trim());
+    return res;
 }
 
 function normalizar(valor) {
-    return valor.replace(/\D/g, '');
+    return valor ? valor.toString().replace(/\D/g, '') : '';
 }
 
 async function buscar() {
     const resContainer = document.getElementById("resultado");
-    const numDigitado = document.getElementById("numero").value;
-    const numeroBusca = normalizar(numDigitado);
+    const numInput = document.getElementById("numero").value;
+    const numeroBusca = normalizar(numInput);
 
     if (!numeroBusca) {
-        resContainer.innerHTML = "<div class='erro'>⚠️ Por favor, digite o número do processo.</div>";
+        resContainer.innerHTML = "<div class='erro'>⚠️ Digite o número do processo.</div>";
         return;
     }
 
-    resContainer.innerHTML = "<div class='loading'>⏳ Localizando informações...</div>";
+    resContainer.innerHTML = "<div class='loading'>⏳ Consultando base de dados...</div>";
 
     try {
-        // O cache: 'no-store' força o app a buscar dados novos sempre
-        const res = await fetch(url, { cache: 'no-store' });
-        if (!res.ok) throw new Error("Falha na conexão com o servidor.");
+        const response = await fetch(url + "&t=" + new Date().getTime());
+        if (!response.ok) throw new Error();
         
-        const text = await res.text();
-        const linhas = text.split("\n");
+        const data = await response.text();
+        const linhas = data.split(/\r?\n/).filter(l => l.trim().length > 0);
 
         let historico = [];
         let nomeProcesso = "";
 
         for (let i = 1; i < linhas.length; i++) {
-            const col = linhas[i].split(",");
-            if (col.length < 3) continue;
-
-            const numeroPlanilha = normalizar(limpar(col[0]));
-
-            if (numeroPlanilha === numeroBusca) {
-                nomeProcesso = limpar(col[1]);
-                historico.push({
-                    status: limpar(col[2]),
-                    data: limpar(col[3])
-                });
+            const colunas = parseCSVLine(linhas[i]);
+            if (colunas.length >= 3) {
+                const numPlanilha = normalizar(colunas[0]);
+                if (numPlanilha === numeroBusca) {
+                    nomeProcesso = colunas[1].replace(/"/g, '');
+                    historico.push({
+                        status: colunas[2].replace(/"/g, ''),
+                        data: colunas[3] ? colunas[3].replace(/"/g, '') : "---"
+                    });
+                }
             }
         }
 
         if (historico.length === 0) {
-            resContainer.innerHTML = "<div class='erro'>❌ Processo " + numDigitado + " não encontrado.</div>";
+            resContainer.innerHTML = <div class='erro'>❌ Processo ${numInput} não localizado.</div>;
             return;
         }
 
-        // Inverte para mostrar o mais recente primeiro
         historico.reverse();
-
-        let html = `
-        <div class="card">
-            <div class="titulo-processo">${nomeProcesso}</div>
-            <div style="margin-bottom: 20px;"><b>ID:</b> ${numDigitado}</div>
-            <div style="font-weight: bold; border-bottom: 1px solid #003366; display: inline-block; margin-bottom: 10px;">HISTÓRICO:</div>
-        `;
-
+        let html = <div class="card"><div class="titulo-processo">${nomeProcesso}</div><div style="font-weight: bold; border-bottom: 1px solid #003366; margin-bottom: 10px;">MOVIMENTAÇÕES:</div>;
         historico.forEach(item => {
-            html += `
-            <div class="linha">
-                <span class="data-status">${item.data}</span>
-                <span class="desc-status">${item.status}</span>
-            </div>`;
+            html += <div class="linha"><span class="data-status">${item.data}</span><span class="desc-status">${item.status}</span></div>;
         });
-
         html += '</div>';
         resContainer.innerHTML = html;
 
-    } catch (error) {
-        resContainer.innerHTML = "<div class='erro'>🚫 Erro de rede. Verifique sua conexão e tente novamente.</div>";
+    } catch (e) {
+        resContainer.innerHTML = "<div class='erro'>🚫 Erro ao acessar dados. Verifique sua internet.</div>";
     }
 }
+
+document.getElementById("btnConsultar").addEventListener("click", buscar);
 </script>
 </body>
 </html>
