@@ -1,15 +1,16 @@
 <?xml version='1.0' encoding='utf-8'?>
-<widget id="br.gov.betim.sadcp" version="1.0.0" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+<widget id="br.gov.betim.sadcp" version="1.0.0" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0" xmlns:android="http://schemas.android.com/apk/res/android">
     <name>SADCP Rastreio</name>
     <description>Rastreio de Processos SADCP - Prefeitura de Betim</description>
     <author email="contato@betim.mg.gov.br" href="http://betim.mg.gov.br">SADCP</author>
     
     <content src="index.html" />
     
+    <!-- Permissões de Acesso Total -->
     <access origin="*" />
+    <allow-navigation href="*" />
     <allow-intent href="http:///" />
     <allow-intent href="https:///" />
-    <allow-navigation href="*" />
     
     <preference name="loglevel" value="DEBUG" />
     <preference name="AndroidXEnabled" value="true" />
@@ -18,5 +19,10 @@
     <platform name="android">
         <allow-intent href="market:*" />
         <preference name="KeepRunning" value="true" />
+        
+        <!-- Esta linha abaixo é o segredo para o Android aceitar baixar os dados da planilha -->
+        <edit-config file="app/src/main/AndroidManifest.xml" mode="merge" target="/manifest/application">
+            <application android:usesCleartextTraffic="true" />
+        </edit-config>
     </platform>
 </widget>
