@@ -20,7 +20,6 @@ jobs:
         with:
           java-version: '8'
           distribution: 'temurin'
-          cache: 'gradle'
 
       - name: Instalar Node.js
         uses: actions/setup-node@v4
@@ -30,9 +29,9 @@ jobs:
       - name: Instalar Cordova
         run: npm install -g cordova
 
-      - name: Adicionar Plataforma Android
+      - name: Preparar Plataforma Android
         run: |
-          cordova platform add android || echo "Plataforma já existe"
+          cordova platform add android || echo "Plataforma já existe ou será criada no build"
 
       - name: Criar APK (Build)
         run: cordova build android --debug --no-telemetry
