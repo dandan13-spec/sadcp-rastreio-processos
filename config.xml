@@ -1,42 +1,22 @@
 <?xml version='1.0' encoding='utf-8'?>
-<widget id="com.sadcp.rastreio" version="1.0.0"
-    xmlns="http://www.w3.org/ns/widgets"
-    xmlns:cdv="http://cordova.apache.org/ns/1.0">
-
-    <name>SADCP - Rastreio de Processos</name>
-
-    <description>
-        Aplicativo de acompanhamento de processos da SADCP - Prefeitura de Betim
-    </description>
-
-    <author email="contato@sadcp.betim.mg.gov.br">
-        SADCP - Prefeitura de Betim
-    </author>
-
+<widget id="br.gov.betim.sadcp" version="1.0.0" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+    <name>SADCP Rastreio</name>
+    <description>Rastreio de Processos - Prefeitura de Betim</description>
+    <author email="contato@betim.mg.gov.br" href="http://betim.mg.gov.br">SADCP</author>
+    
     <content src="index.html" />
-
+    
+    <!-- Permissões de Acesso à Internet -->
     <access origin="*" />
+    <allow-intent href="http:///" />
+    <allow-intent href="https:///" />
+    <allow-navigation href="*" />
+    
+    <preference name="loglevel" value="DEBUG" />
+    <preference name="AndroidXEnabled" value="true" />
 
-    <!-- ÍCONE PRINCIPAL -->
-    <icon src="www/img/icon.png" />
-
-    <!-- ANDROID -->
     <platform name="android">
-
-        <allow-intent href="http:///" />
-        <allow-intent href="https:///" />
-
-        <!-- ÍCONES ANDROID (melhor qualidade) -->
-        <icon src="www/img/icon.png" density="ldpi" />
-        <icon src="www/img/icon.png" density="mdpi" />
-        <icon src="www/img/icon.png" density="hdpi" />
-        <icon src="www/img/icon.png" density="xhdpi" />
-        <icon src="www/img/icon.png" density="xxhdpi" />
-        <icon src="www/img/icon.png" density="xxxhdpi" />
-
+        <allow-intent href="market:*" />
+        <preference name="KeepRunning" value="true" />
     </platform>
-
-    <preference name="AndroidPersistentFileLocation" value="Internal" />
-    <preference name="SplashScreen" value="screen" />
-
 </widget>
