@@ -18,11 +18,15 @@ jobs:
           java-version: '11'
           distribution: 'temurin'
 
-      # Esta Action prepara o Gradle 7.4.2 corretamente no sistema
       - name: Setup Gradle 7.4.2
         uses: gradle/actions/setup-gradle@v3
         with:
           gradle-version: 7.4.2
+
+      # PASSO NOVO: Instalar as ferramentas de Build do Android 32
+      - name: Instalar Android Build Tools 32
+        run: |
+          echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --sdk_root=$ANDROID_HOME "build-tools;32.0.0" "platforms;android-32"
 
       - name: Instalar Node.js e Cordova
         uses: actions/setup-node@v4
@@ -34,11 +38,7 @@ jobs:
 
       - name: Build APK
         run: |
-          # Adiciona a plataforma
           cordova platform add android@11.0.0 --non-interactive
-          
-          # O segredo: dizemos ao Cordova para NÃO baixar o Gradle, 
-          # e sim usar o que acabamos de configurar no passo anterior.
           cordova build android --debug --no-telemetry --device
         env:
           JAVA_HOME: ${{ env.JAVA_HOME_11_X64 }}
