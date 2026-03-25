@@ -1,0 +1,22 @@
+name: Gerar meu Aplicativo
+on: [push, workflow_dispatch]
+jobs:
+  construir:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+      - name: Preparar e Criar APK
+        run: |
+          npm install -g cordova
+          npm install
+          cordova platform add android
+          cordova build android
+      - name: Entregar Arquivo
+        uses: actions/upload-artifact@v4
+        with:
+          name: meu-app-pronto
+          path: platforms/android/app/build/outputs/apk/debug/*.apk
